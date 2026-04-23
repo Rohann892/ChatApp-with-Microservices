@@ -1,0 +1,10 @@
+.env.local
+.env.example
+.env.production
+.env.development
+.env.test
+.env
+.DS_Store
+.vscode
+node_modules
+node_modules

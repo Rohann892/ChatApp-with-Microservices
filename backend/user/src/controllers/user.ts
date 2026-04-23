@@ -110,7 +110,7 @@ export const upadateName = TryCatch(async (req: AuthenticatedRequest, res) => {
   });
 });
 
-export const getAllUser = TryCatch(async (req: AuthenticatedRequest, res) => {
+export const getAllUser = TryCatch(async (req, res) => {
   const users = await User.find();
   return res.status(200).json({
     success: true,

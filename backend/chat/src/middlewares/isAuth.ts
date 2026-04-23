@@ -1,6 +1,11 @@
-import type { NextFunction, Request, Response } from "express";
-import type { IUser } from "../model/user.js";
+import type { Request, Response, NextFunction } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
+
+interface IUser {
+  _id: string;
+  name: string;
+  email: string;
+}
 
 export interface AuthenticatedRequest extends Request {
   user?: IUser | null;
@@ -47,6 +52,7 @@ export const isAuth = async (
     req.user = decodedValue.user;
     next();
   } catch (error) {
+    console.error("JWT Verification Error:", error);
     res.status(401).json({
       message: "Please login - JWT error",
       error: error instanceof Error ? error.message : String(error),
@@ -54,3 +60,5 @@ export const isAuth = async (
     return;
   }
 };
+
+export default isAuth;

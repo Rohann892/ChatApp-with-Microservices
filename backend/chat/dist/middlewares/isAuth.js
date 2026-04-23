@@ -29,6 +29,7 @@ export const isAuth = async (req, res, next) => {
         next();
     }
     catch (error) {
+        console.error("JWT Verification Error:", error);
         res.status(401).json({
             message: "Please login - JWT error",
             error: error instanceof Error ? error.message : String(error),
@@ -36,4 +37,5 @@ export const isAuth = async (req, res, next) => {
         return;
     }
 };
+export default isAuth;
 //# sourceMappingURL=isAuth.js.map

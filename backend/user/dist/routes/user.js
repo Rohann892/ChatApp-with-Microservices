@@ -6,7 +6,7 @@ router.post("/login", loginUser);
 router.post("/verify", verifyUser);
 router.get("/me", isAuth, myProfile);
 router.get("/all", isAuth, getAllUser);
-router.get("/:id", isAuth, getAUser);
+router.get("/:id", getAUser);
 router.post("/update", isAuth, upadateName);
 export default router;
 //# sourceMappingURL=user.js.map
