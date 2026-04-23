@@ -21,7 +21,9 @@ redisClient
 
 const app = express();
 
-app.use("api/v1", userRoutes);
+app.use(express.json());
+
+app.use("/api/v1", userRoutes);
 
 const PORT = process.env.PORT || 3000;
 

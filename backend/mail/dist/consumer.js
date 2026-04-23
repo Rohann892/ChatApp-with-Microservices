@@ -23,8 +23,8 @@ export const startSendOtpConsumer = async () => {
                         host: "smtp.gmail.com",
                         port: 465,
                         auth: {
-                            user: process.env.USER,
-                            pass: process.env.PASSWORD,
+                            user: process.env.SMTP_USER,
+                            pass: process.env.SMTP_PASSWORD,
                         },
                     });
                     await trasnporter.sendMail({
@@ -33,7 +33,7 @@ export const startSendOtpConsumer = async () => {
                         subject,
                         text: body,
                     });
-                    console.log("✅ otp email sent successfully");
+                    console.log(`✅ otp email sent successfully to ${to}`);
                     channel.ack(msg);
                 }
                 catch (error) {
