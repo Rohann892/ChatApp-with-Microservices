@@ -11,6 +11,12 @@ export const connectRabbitMQ = async () => {
             password: process.env.RABBITMQ_PASSWORD,
         });
         channel = await connection.createChannel();
+        connection.on("error", (err) => {
+            console.error("RabbitMQ Connection Error:", err);
+        });
+        connection.on("close", () => {
+            console.warn("RabbitMQ Connection Closed");
+        });
         console.log("✅ Connected to RabbitMQ");
     }
     catch (error) {

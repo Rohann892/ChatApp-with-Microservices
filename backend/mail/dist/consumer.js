@@ -12,6 +12,12 @@ export const startSendOtpConsumer = async () => {
             password: process.env.RABBITMQ_PASSWORD,
         });
         const channel = await connection.createChannel();
+        connection.on("error", (err) => {
+            console.error("RabbitMQ Connection Error:", err);
+        });
+        connection.on("close", () => {
+            console.warn("RabbitMQ Connection Closed");
+        });
         const queueName = "send-otp";
         await channel.assertQueue(queueName, { durable: true });
         console.log("✅ mail service started, listening for otp emails");

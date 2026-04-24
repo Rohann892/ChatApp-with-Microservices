@@ -14,6 +14,14 @@ export const startSendOtpConsumer = async () => {
     });
 
     const channel = await connection.createChannel();
+    
+    connection.on("error", (err) => {
+      console.error("RabbitMQ Connection Error:", err);
+    });
+    
+    connection.on("close", () => {
+      console.warn("RabbitMQ Connection Closed");
+    });
 
     const queueName = "send-otp";
 
