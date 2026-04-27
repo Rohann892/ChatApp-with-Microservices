@@ -68,11 +68,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     try {
       const token = Cookies.get("token");
 
-      //   if (!token) {
-      //     setLoading(false);
-      //     setIsAuth(false);
-      //     return;
-      //   }
+      if (!token) {
+        setLoading(false);
+        setIsAuth(false);
+        return;
+      }
 
       console.log("token", token);
       const response = await axios.get(`${user_service}/api/v1/user/me`, {
@@ -101,6 +101,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   async function fetchAllChats() {
     try {
       const token = Cookies.get("token");
+      if (!token) return;
+      
       const response = await axios.get(`${chat_service}/api/v1/chat/all`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -116,6 +118,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   async function fetchAllUsers() {
     const token = Cookies.get("token");
+    if (!token) return;
+    
     try {
       const response = await axios.get(`${user_service}/api/v1/user/all`, {
         headers: {

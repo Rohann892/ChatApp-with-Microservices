@@ -10,7 +10,7 @@ export const isAuth = async (req, res, next) => {
             return;
         }
         const token = authHeader.split(" ")[1];
-        if (!token) {
+        if (!token || token === "undefined" || token === "null") {
             res.status(401).json({
                 success: false,
                 message: "Please login - No token provided",
