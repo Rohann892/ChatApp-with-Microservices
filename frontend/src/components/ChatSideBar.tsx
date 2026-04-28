@@ -1,6 +1,10 @@
 import { User } from "@/context/AppContext";
 import {
+  Camera,
+  CornerDownRight,
+  CornerUpLeft,
   Divide,
+  LogOut,
   MessageCircle,
   Plus,
   Search,
@@ -9,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useState } from "react";
+import Link from "next/link";
 
 interface ChatSideBarProps {
   sidebarOpen: boolean;
@@ -21,6 +26,7 @@ interface ChatSideBarProps {
   selectedUser: string | null;
   setSelectedUser: (userId: string | null) => void;
   handleLogout: () => void;
+  createChat: (user: User) => void;
 }
 
 const ChatSideBar = ({
@@ -34,6 +40,7 @@ const ChatSideBar = ({
   selectedUser,
   setSelectedUser,
   handleLogout,
+  createChat,
 }: ChatSideBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   return (
@@ -102,6 +109,7 @@ const ChatSideBar = ({
                   <button
                     key={u._id}
                     className="w-full text-left p-4 rounded-lg border border-gray-700 hover:border-gray-600 hover:bg-gray-800 tranition-colors"
+                    onClick={() => createChat(u)}
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">
@@ -125,7 +133,7 @@ const ChatSideBar = ({
               const latestMessage = chat.chat.latestMessage;
               const isSelected = selectedUser === chat.chat._id;
               const isSentByMe = latestMessage?.sender === loggedInUser?._id;
-              const unseenCount = chat.chat.unSeenCount || 0;
+              const unseenCount = chat.chat.unseenCount || 0;
 
               return (
                 <button
@@ -150,7 +158,7 @@ const ChatSideBar = ({
                             isSelected ? "text-white" : "text-gray-200"
                           }`}
                         >
-                          {chat.chat.name}
+                          {chat.user.name}
                         </span>
                         {unseenCount > 0 && (
                           <div className="bg-red-600 text-white text-xs font-bold rounded-full min-w-[27px] h-5.5 flex items-center justify-center px-2">
@@ -158,6 +166,30 @@ const ChatSideBar = ({
                           </div>
                         )}
                       </div>
+                      {latestMessage && (
+                        <div className="flex items-center gap-2">
+                          {isSentByMe ? (
+                            <CornerUpLeft
+                              size={14}
+                              className="text-blue-400 text-shrink-0"
+                            />
+                          ) : (
+                            <CornerDownRight
+                              size={14}
+                              className="text-green-400 text-shrink-0"
+                            />
+                          )}
+                          {latestMessage.latestMessage === "📸" ? (
+                            <span className="text-sm text-gray-400 flex items-center gap-1">
+                              📸 Image
+                            </span>
+                          ) : (
+                            <span className="text-sm text-gray-400 truncate flex-1">
+                              {latestMessage.latestMessage}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -165,8 +197,37 @@ const ChatSideBar = ({
             })}
           </div>
         ) : (
-          <div></div>
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="p-4 bg-gray-800 rounded-2xl mb-4">
+              <MessageCircle className="w-8 h-8 text-gray-400" />
+              <p className="text-gray-400 font-medium">No conversation yet</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Start a new chat to begin messeging
+              </p>
+            </div>
+          </div>
         )}
+      </div>
+      {/* footer */}
+      <div className="p-4 border-t border-gray-700 space-y-2">
+        <Link
+          href={"/profile"}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          <div className="p-1.5 bg-gray-700 rounded-lg">
+            <UserCircle className="w-4 h-4 text-gray-300" />
+          </div>
+          <span className="text-gray-300 font-medium">Profile</span>
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-600 transition-colors"
+        >
+          <div className="p-1.5 bg-red-600 rounded-lg">
+            <LogOut className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-white font-medium">Logout</span>
+        </button>
       </div>
     </aside>
   );

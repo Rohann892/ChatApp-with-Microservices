@@ -3,7 +3,6 @@ import TryCatch from "../config/TryCatch.js";
 import type { AuthenticatedRequest } from "../middlewares/isAuth.js";
 import { Chat } from "../model/chat.js";
 import { Messages } from "../model/message.js";
-import cloudinary from "../config/cloudinary.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -68,7 +67,7 @@ export const getAllChats = TryCatch(async (req: AuthenticatedRequest, res) => {
         );
 
         return {
-          user: data,
+          user: data.user,
           chat: {
             ...chat.toObject(),
             latestMessage: chat.latestMessage || null,
@@ -100,7 +99,7 @@ export const getAllChats = TryCatch(async (req: AuthenticatedRequest, res) => {
 });
 
 export const sendMessage = TryCatch(async (req: AuthenticatedRequest, res) => {
-  const senderId = req.user;
+  const senderId = req.user?._id;
   const { chatId, text } = req.body;
   const imageFile = req.file;
 
@@ -165,27 +164,12 @@ export const sendMessage = TryCatch(async (req: AuthenticatedRequest, res) => {
   };
 
   if (imageFile) {
-    const uploadResult: any = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: "chat-images",
-          allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
-          transformation: [
-            { width: 800, height: 800, crop: "limit" },
-            { quality: "auto" },
-          ],
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        },
-      );
-      stream.end(imageFile.buffer);
-    });
-
+    // multer-storage-cloudinary already uploaded the file;
+    // req.file.path  → secure URL
+    // req.file.filename → public_id
     messageData.image = {
-      url: uploadResult.secure_url,
-      publicId: uploadResult.public_id,
+      url: (imageFile as any).path,
+      publicId: (imageFile as any).filename,
     };
     messageData.messageType = "image";
     messageData.text = text || "";
@@ -297,7 +281,7 @@ export const getMessageByChat = TryCatch(
 
       res.json({
         messages,
-        user: data,
+        user: data.user,
       });
     } catch (error) {
       console.log(error);

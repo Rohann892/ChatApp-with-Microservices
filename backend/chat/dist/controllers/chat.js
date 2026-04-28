@@ -2,7 +2,6 @@ import axios from "axios";
 import TryCatch from "../config/TryCatch.js";
 import { Chat } from "../model/chat.js";
 import { Messages } from "../model/message.js";
-import cloudinary from "../config/cloudinary.js";
 import dotenv from "dotenv";
 dotenv.config();
 export const createNewChat = TryCatch(async (req, res) => {
@@ -51,7 +50,7 @@ export const getAllChats = TryCatch(async (req, res) => {
         try {
             const { data } = await axios.get(`${process.env.USER_SERVICE}/api/v1/user/${otherUserId}`);
             return {
-                user: data,
+                user: data.user,
                 chat: {
                     ...chat.toObject(),
                     latestMessage: chat.latestMessage || null,
@@ -81,7 +80,7 @@ export const getAllChats = TryCatch(async (req, res) => {
     return;
 });
 export const sendMessage = TryCatch(async (req, res) => {
-    const senderId = req.user;
+    const senderId = req.user?._id;
     const { chatId, text } = req.body;
     const imageFile = req.file;
     if (!senderId) {
@@ -131,25 +130,12 @@ export const sendMessage = TryCatch(async (req, res) => {
         seenAt: undefined,
     };
     if (imageFile) {
-        const uploadResult = await new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream({
-                folder: "chat-images",
-                allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
-                transformation: [
-                    { width: 800, height: 800, crop: "limit" },
-                    { quality: "auto" },
-                ],
-            }, (error, result) => {
-                if (error)
-                    reject(error);
-                else
-                    resolve(result);
-            });
-            stream.end(imageFile.buffer);
-        });
+        // multer-storage-cloudinary already uploaded the file;
+        // req.file.path  → secure URL
+        // req.file.filename → public_id
         messageData.image = {
-            url: uploadResult.secure_url,
-            publicId: uploadResult.public_id,
+            url: imageFile.path,
+            publicId: imageFile.filename,
         };
         messageData.messageType = "image";
         messageData.text = text || "";
@@ -231,7 +217,7 @@ export const getMessageByChat = TryCatch(async (req, res) => {
         //   socket work
         res.json({
             messages,
-            user: data,
+            user: data.user,
         });
     }
     catch (error) {
