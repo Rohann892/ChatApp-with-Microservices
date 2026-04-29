@@ -3,9 +3,9 @@ import dotenv from "dotenv";
 import connectToDB from "./config/db.js";
 import chatRoute from "./routes/chat.js";
 import cors from "cors";
+import { app, server } from "./config/socket.js";
 dotenv.config();
 connectToDB();
-const app = express();
 const port = process.env.PORT;
 app.use(express.json());
 app.use(cors({
@@ -13,7 +13,7 @@ app.use(cors({
     credentials: true,
 }));
 app.use("/api/v1/chat", chatRoute);
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server started at ${port}`);
 });
 //# sourceMappingURL=index.js.map

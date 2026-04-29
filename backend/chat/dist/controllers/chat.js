@@ -2,7 +2,9 @@ import axios from "axios";
 import TryCatch from "../config/TryCatch.js";
 import { Chat } from "../model/chat.js";
 import { Messages } from "../model/message.js";
+import cloudinary from "../config/cloudinary.js";
 import dotenv from "dotenv";
+import { getReceiverSocketMap, io, } from "../config/socket.js";
 dotenv.config();
 export const createNewChat = TryCatch(async (req, res) => {
     const userId = req.user?._id;
@@ -41,7 +43,7 @@ export const getAllChats = TryCatch(async (req, res) => {
     }
     const chats = await Chat.find({ users: userId }).sort({ updatedAt: -1 });
     const chatsWithUserData = await Promise.all(chats.map(async (chat) => {
-        const otherUserId = chat.users.find((id) => id !== userId);
+        const otherUserId = chat.users.find((id) => id.toString() !== userId);
         const unseenCount = await Messages.countDocuments({
             chatId: chat._id,
             sender: { $ne: userId },
@@ -123,19 +125,40 @@ export const sendMessage = TryCatch(async (req, res) => {
         return;
     }
     //   socket.io setup from here
+    const receiverSocketId = getReceiverSocketMap(otherUserId);
+    let isReceiverInChatRoom = false;
+    if (receiverSocketId) {
+        const receiverSocket = io.sockets.sockets.get(receiverSocketId);
+        if (receiverSocket && receiverSocket.rooms.has(chatId)) {
+            isReceiverInChatRoom = true;
+        }
+    }
     let messageData = {
         chatId: chatId,
         sender: senderId,
-        seen: false,
-        seenAt: undefined,
+        seen: isReceiverInChatRoom,
+        seenAt: isReceiverInChatRoom ? new Date() : undefined,
     };
     if (imageFile) {
-        // multer-storage-cloudinary already uploaded the file;
-        // req.file.path  → secure URL
-        // req.file.filename → public_id
+        const uploadResult = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream({
+                folder: "chat-images",
+                allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+                transformation: [
+                    { width: 800, height: 800, crop: "limit" },
+                    { quality: "auto" },
+                ],
+            }, (error, result) => {
+                if (error)
+                    reject(error);
+                else
+                    resolve(result);
+            });
+            stream.end(imageFile.buffer);
+        });
         messageData.image = {
-            url: imageFile.path,
-            publicId: imageFile.filename,
+            url: uploadResult.secure_url,
+            publicId: uploadResult.public_id,
         };
         messageData.messageType = "image";
         messageData.text = text || "";
@@ -155,6 +178,14 @@ export const sendMessage = TryCatch(async (req, res) => {
         updatedAt: new Date(),
     }, { new: true });
     //   emit to socket
+    io.to(chatId).emit("newMessage", savedMessage);
+    const senderSocketId = getReceiverSocketMap(senderId?.toString());
+    if (isReceiverInChatRoom && senderSocketId) {
+        io.to(senderSocketId).emit("messageSeen", {
+            chatId: chatId,
+            seenBy: otherUserId,
+        });
+    }
     res.status(201).json({
         message: savedMessage,
         sender: senderId,
@@ -215,6 +246,16 @@ export const getMessageByChat = TryCatch(async (req, res) => {
             return;
         }
         //   socket work
+        if (messagesToMarkSeen.length > 0) {
+            const otherUserSocketId = getReceiverSocketMap(otherUserId?.toString());
+            if (otherUserSocketId) {
+                io.to(otherUserSocketId).emit("messageSeen", {
+                    chatId: chatId,
+                    seenBy: userId,
+                    messageIds: messagesToMarkSeen.map((msg) => msg._id),
+                });
+            }
+        }
         res.json({
             messages,
             user: data.user,

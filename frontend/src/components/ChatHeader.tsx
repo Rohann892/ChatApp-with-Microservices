@@ -6,9 +6,15 @@ interface chatHeaderProps {
   user: User | null;
   setSideBarOpen: (open: boolean) => void;
   isTyping: boolean;
+  onlineUsers: string[];
 }
 
-const ChatHeader = ({ user, setSideBarOpen, isTyping }: chatHeaderProps) => {
+const ChatHeader = ({
+  user,
+  setSideBarOpen,
+  isTyping,
+  onlineUsers,
+}: chatHeaderProps) => {
   return (
     <>
       {/* mobile menu toggele button */}
@@ -31,6 +37,11 @@ const ChatHeader = ({ user, setSideBarOpen, isTyping }: chatHeaderProps) => {
                   <UserCircle className="w-8 h-8 text-gray-300" />
                 </div>
                 {/* online user setup */}
+                {onlineUsers.includes(user._id) && (
+                  <span className="absolute top-10 right-1 w-3.5 h-3.5 rounded-full bg-green-500 border-2  border-gray-900">
+                    <span className="absolute inset-0 rounded-full bg-green-500 animate-ping"></span>
+                  </span>
+                )}
               </div>
               {/* user info */}
               <div className="flex-1 min-w-0">
@@ -39,6 +50,20 @@ const ChatHeader = ({ user, setSideBarOpen, isTyping }: chatHeaderProps) => {
                     {user.name}
                   </h2>
                 </div>
+                {isTyping ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                    </div>
+                    <span className="text-blue-500 text-sm font-medium">Typing...</span>
+                  </div>
+                ) : (
+                  <span className={`text-sm font-medium ${onlineUsers.includes(user._id) ? "text-green-400" : "text-gray-400"}`}>
+                    {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+                  </span>
+                )}
               </div>
 
               {/* to show typing status after socket io connection */}
